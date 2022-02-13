@@ -38,10 +38,10 @@ class StoredUpdate[P1, P2](
 
   // run
 
-  def run(changeArgs: P1, filterArgs: P2): RIO[Kuzminki with Any, Unit] =
+  def run(changeArgs: P1, filterArgs: P2): RIO[Kuzminki, Unit] =
     db.exec(render(changeArgs, filterArgs))
 
-  def runNum(changeArgs: P1, filterArgs: P2): RIO[Kuzminki with Any, Int] =
+  def runNum(changeArgs: P1, filterArgs: P2): RIO[Kuzminki, Int] =
     db.execNum(render(changeArgs, filterArgs))
 
   // debug

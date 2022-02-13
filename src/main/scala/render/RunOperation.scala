@@ -25,10 +25,10 @@ trait RunOperation {
 
   def render: RenderedOperation
 
-  def run: RIO[Kuzminki with Any, Unit] =
+  def run: RIO[Kuzminki, Unit] =
     db.exec(render)
 
-  def runNum: RIO[Kuzminki with Any, Int] =
+  def runNum: RIO[Kuzminki, Int] =
     db.execNum(render)
 }
 
@@ -37,10 +37,10 @@ trait RunOperationParams[P] {
 
   def render(params: P): RenderedOperation
 
-  def run(params: P): RIO[Kuzminki with Any, Unit] =
+  def run(params: P): RIO[Kuzminki, Unit] =
     db.exec(render(params))
 
-  def runNum(params: P): RIO[Kuzminki with Any, Int] =
+  def runNum(params: P): RIO[Kuzminki, Int] =
     db.execNum(render(params))
 }
 

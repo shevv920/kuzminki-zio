@@ -76,10 +76,10 @@ class InsertOptions[M <: Model, P](
 
   // run
 
-  def runSeq(paramsSeq: Seq[P]): RIO[Kuzminki with Any, Unit] =
+  def runSeq(paramsSeq: Seq[P]): RIO[Kuzminki, Unit] =
     db.exec(renderSeq(paramsSeq))
 
-  def runSeqNum(paramsSeq: Seq[P]): RIO[Kuzminki with Any, Int] =
+  def runSeqNum(paramsSeq: Seq[P]): RIO[Kuzminki, Int] =
     db.execNum(renderSeq(paramsSeq))
 
   def debugSql(handler: String => Unit) = {
