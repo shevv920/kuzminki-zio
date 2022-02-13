@@ -17,7 +17,7 @@
 package kuzminki.render
 
 import zio._
-import zio.blocking._
+
 import kuzminki.api.{db, Kuzminki}
 
 
@@ -25,10 +25,10 @@ trait RunOperation {
 
   def render: RenderedOperation
 
-  def run: RIO[Has[Kuzminki] with Blocking, Unit] =
+  def run: RIO[Kuzminki with Any, Unit] =
     db.exec(render)
 
-  def runNum: RIO[Has[Kuzminki] with Blocking, Int] =
+  def runNum: RIO[Kuzminki with Any, Int] =
     db.execNum(render)
 }
 
@@ -37,10 +37,10 @@ trait RunOperationParams[P] {
 
   def render(params: P): RenderedOperation
 
-  def run(params: P): RIO[Has[Kuzminki] with Blocking, Unit] =
+  def run(params: P): RIO[Kuzminki with Any, Unit] =
     db.exec(render(params))
 
-  def runNum(params: P): RIO[Has[Kuzminki] with Blocking, Int] =
+  def runNum(params: P): RIO[Kuzminki with Any, Int] =
     db.execNum(render(params))
 }
 

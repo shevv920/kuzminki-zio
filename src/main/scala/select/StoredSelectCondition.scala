@@ -17,7 +17,7 @@
 package kuzminki.select
 
 import zio._
-import zio.blocking._
+
 import kuzminki.api.{db, Kuzminki}
 import kuzminki.render.{RunQueryParams, RenderedQuery}
 import kuzminki.shape.ParamConv

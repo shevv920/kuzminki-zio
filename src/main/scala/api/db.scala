@@ -23,41 +23,42 @@ import kuzminki.render.{
 }
 
 import zio._
-import zio.console._
-import zio.blocking._
+
+
+import zio.Console._
 
 
 object db { 
 
-  def query[R](render: => RenderedQuery[R]): RIO[Has[Kuzminki] with Blocking, List[R]] = {
+  def query[R](render: => RenderedQuery[R]): RIO[Kuzminki with Any, List[R]] = {
     for {
       db   <- Kuzminki.get
       rows <- db.query(render)
     } yield rows
   }
 
-  def queryHead[R](render: => RenderedQuery[R]): RIO[Has[Kuzminki] with Blocking, R] = {
+  def queryHead[R](render: => RenderedQuery[R]): RIO[Kuzminki with Any, R] = {
     for {
       db   <- Kuzminki.get
       head <- db.queryHead(render)
     } yield head
   }
 
-  def queryHeadOpt[R](render: => RenderedQuery[R]): RIO[Has[Kuzminki] with Blocking, Option[R]] = {
+  def queryHeadOpt[R](render: => RenderedQuery[R]): RIO[Kuzminki with Any, Option[R]] = {
     for {
       db      <- Kuzminki.get
       headOpt <- db.queryHeadOpt(render)
     } yield headOpt
   }
 
-  def exec(render: => RenderedOperation): RIO[Has[Kuzminki] with Blocking, Unit] = {
+  def exec(render: => RenderedOperation): RIO[Kuzminki with Any, Unit] = {
     for {
       db <- Kuzminki.get
       _  <- db.exec(render)
     } yield ()
   }
 
-  def execNum(render: => RenderedOperation): RIO[Has[Kuzminki] with Blocking, Int] = {
+  def execNum(render: => RenderedOperation): RIO[Kuzminki with Any, Int] = {
     for {
       db   <- Kuzminki.get
       num  <- db.execNum(render)

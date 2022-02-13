@@ -17,7 +17,7 @@
 package kuzminki.insert
 
 import zio._
-import zio.blocking._
+
 import kuzminki.api.{db, Kuzminki}
 import kuzminki.api.Model
 import kuzminki.shape.ParamShape
@@ -76,10 +76,10 @@ class InsertOptions[M <: Model, P](
 
   // run
 
-  def runSeq(paramsSeq: Seq[P]): RIO[Has[Kuzminki] with Blocking, Unit] =
+  def runSeq(paramsSeq: Seq[P]): RIO[Kuzminki with Any, Unit] =
     db.exec(renderSeq(paramsSeq))
 
-  def runSeqNum(paramsSeq: Seq[P]): RIO[Has[Kuzminki] with Blocking, Int] =
+  def runSeqNum(paramsSeq: Seq[P]): RIO[Kuzminki with Any, Int] =
     db.execNum(renderSeq(paramsSeq))
 
   def debugSql(handler: String => Unit) = {
