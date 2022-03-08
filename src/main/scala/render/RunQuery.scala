@@ -17,7 +17,7 @@
 package kuzminki.render
 
 import zio._
-import zio.blocking._
+
 import kuzminki.api.{db, Kuzminki}
 
 
@@ -25,13 +25,13 @@ trait RunQuery[R] {
 
   def render: RenderedQuery[R]
 
-  def run: RIO[Has[Kuzminki] with Blocking, List[R]] =
+  def run: RIO[Kuzminki, List[R]] =
     db.query(render)
 
-  def runHead: RIO[Has[Kuzminki] with Blocking, R] =
+  def runHead: RIO[Kuzminki, R] =
     db.queryHead(render)
 
-  def runHeadOpt: RIO[Has[Kuzminki] with Blocking, Option[R]] =
+  def runHeadOpt: RIO[Kuzminki, Option[R]] =
     db.queryHeadOpt(render)
 }
 
@@ -40,13 +40,13 @@ trait RunQueryParams[P, R] {
 
   def render(params: P): RenderedQuery[R]
 
-  def run(params: P): RIO[Has[Kuzminki] with Blocking, List[R]] =
+  def run(params: P): RIO[Kuzminki, List[R]] =
     db.query(render(params))
 
-  def runHead(params: P): RIO[Has[Kuzminki] with Blocking, R] =
+  def runHead(params: P): RIO[Kuzminki, R] =
     db.queryHead(render(params))
 
-  def runHeadOpt(params: P): RIO[Has[Kuzminki] with Blocking, Option[R]] =
+  def runHeadOpt(params: P): RIO[Kuzminki, Option[R]] =
     db.queryHeadOpt(render(params))
 }
 

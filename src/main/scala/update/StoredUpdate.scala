@@ -17,7 +17,7 @@
 package kuzminki.update
 
 import zio._
-import zio.blocking._
+
 import kuzminki.api.{db, Kuzminki}
 import kuzminki.shape.ParamConv
 import kuzminki.render.RenderedOperation
@@ -38,10 +38,10 @@ class StoredUpdate[P1, P2](
 
   // run
 
-  def run(changeArgs: P1, filterArgs: P2): RIO[Has[Kuzminki] with Blocking, Unit] =
+  def run(changeArgs: P1, filterArgs: P2): RIO[Kuzminki, Unit] =
     db.exec(render(changeArgs, filterArgs))
 
-  def runNum(changeArgs: P1, filterArgs: P2): RIO[Has[Kuzminki] with Blocking, Int] =
+  def runNum(changeArgs: P1, filterArgs: P2): RIO[Kuzminki, Int] =
     db.execNum(render(changeArgs, filterArgs))
 
   // debug

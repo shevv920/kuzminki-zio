@@ -33,7 +33,6 @@ import scala.reflect.{classTag, ClassTag}
 import scala.collection.mutable.ListBuffer
 
 import zio._
-import zio.blocking._
 
 import kuzminki.api.{DbConfig, KuzminkiError}
 import kuzminki.shape.RowConv
@@ -41,6 +40,8 @@ import kuzminki.render.{
   RenderedQuery,
   RenderedOperation
 }
+import zio.Console._
+import zio.ZIO.attemptBlocking
 
 
 object SingleConnection {
@@ -82,8 +83,8 @@ class SingleConnection(conn: Connection) {
     jdbcStm
   }
 
-  def query[R](stm: RenderedQuery[R]): RIO[Blocking, List[R]] = {
-    effectBlocking {
+  def query[R](stm: RenderedQuery[R]): RIO[Any, List[R]] = {
+    attemptBlocking {
       val jdbcStm = getStatement(stm.statement, stm.args)
       val jdbcResultSet = jdbcStm.executeQuery()
       var buff = ListBuffer.empty[R]
@@ -96,8 +97,8 @@ class SingleConnection(conn: Connection) {
     }
   }
 
-  def exec(stm: RenderedOperation): RIO[Blocking, Unit] = {
-    effectBlocking {
+  def exec(stm: RenderedOperation): RIO[Any, Unit] = {
+    attemptBlocking {
       val jdbcStm = getStatement(stm.statement, stm.args)
       jdbcStm.execute()
       jdbcStm.close()
@@ -105,8 +106,8 @@ class SingleConnection(conn: Connection) {
     }
   }
 
-  def execNum(stm: RenderedOperation): RIO[Blocking, Int] = {
-    effectBlocking {
+  def execNum(stm: RenderedOperation): RIO[Any, Int] = {
+    attemptBlocking {
       val jdbcStm = getStatement(stm.statement, stm.args)
       val num = jdbcStm.executeUpdate()
       jdbcStm.close()
@@ -115,7 +116,7 @@ class SingleConnection(conn: Connection) {
   }
 
   def close() = {
-    effectBlocking {
+    attemptBlocking {
       conn.close()
     }
   }

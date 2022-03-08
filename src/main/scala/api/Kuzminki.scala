@@ -24,17 +24,19 @@ import kuzminki.render.{
 }
 
 import zio._
-import zio.console._
-import zio.blocking._
+
+
+import zio.Console._
+import zio.ZIO.attemptBlocking
 
 
 object Kuzminki {
 
   Class.forName("org.postgresql.Driver")
 
-  private def createPool(conf: DbConfig): RIO[Blocking, Pool] = for {
+  private def createPool(conf: DbConfig): RIO[Any, Pool] = for {
     connections <- ZIO.foreach(1 to conf.poolSize) { _ =>
-                     effectBlocking {
+                     attemptBlocking {
                        SingleConnection.create(conf.url, conf.props)
                      }
                    }
@@ -44,41 +46,41 @@ object Kuzminki {
 
   def forConfig(conf: DbConfig) = create(conf)
 
-  def create(conf: DbConfig): RIO[Blocking, Kuzminki] = for {
+  def create(conf: DbConfig): RIO[Any, Kuzminki] = for {
     pool <- createPool(conf)
   } yield new DefaultApi(pool)
 
-  def layer(conf: DbConfig): ZLayer[Blocking, Throwable, Has[Kuzminki]] = {
+  def layer(conf: DbConfig): ZLayer[Any, Throwable, Kuzminki] = {
     ZLayer.fromAcquireRelease(create(conf))(_.close)
   }
 
   def createSplit(getConf: DbConfig,
-                  setConf: DbConfig): RIO[Blocking, Kuzminki] = for {
+                  setConf: DbConfig): RIO[Any, Kuzminki] = for {
     getPool <- createPool(getConf)
     setPool <- createPool(setConf)
   } yield new SplitApi(getPool, setPool)
 
   def layerSplit(getConf: DbConfig,
-                 setConf: DbConfig): ZLayer[Blocking, Throwable, Has[Kuzminki]] = {
+                 setConf: DbConfig): ZLayer[Any, Throwable, Kuzminki] = {
     ZLayer.fromAcquireRelease(createSplit(getConf, setConf))(_.close)
   }
 
-  def get = ZIO.access[Has[Kuzminki]](_.get)
+  def get = ZIO.service[Kuzminki]
 }
 
 trait Kuzminki {
 
-  def query[R](render: => RenderedQuery[R]): RIO[Blocking, List[R]]
+  def query[R](render: => RenderedQuery[R]): RIO[Any, List[R]]
 
-  def queryHead[R](render: => RenderedQuery[R]): RIO[Blocking, R]
+  def queryHead[R](render: => RenderedQuery[R]): RIO[Any, R]
 
-  def queryHeadOpt[R](render: => RenderedQuery[R]): RIO[Blocking, Option[R]]
+  def queryHeadOpt[R](render: => RenderedQuery[R]): RIO[Any, Option[R]]
 
-  def exec(render: => RenderedOperation): RIO[Blocking, Unit]
+  def exec(render: => RenderedOperation): RIO[Any, Unit]
 
-  def execNum(render: => RenderedOperation): RIO[Blocking, Int]
+  def execNum(render: => RenderedOperation): RIO[Any, Int]
 
-  def close: URIO[Blocking, Unit]
+  def close: URIO[Any, Unit]
 }
 
 
@@ -90,39 +92,39 @@ private case class Pool(
 
 private class DefaultApi(pool: Pool) extends Kuzminki {
 
-  def query[R](render: => RenderedQuery[R]): RIO[Blocking, List[R]] = for {
-    stm  <- Task.effect { render }
+  def query[R](render: => RenderedQuery[R]): RIO[Any, List[R]] = for {
+    stm  <- Task.attempt { render }
     conn <- pool.queue.take
     rows <- conn.query(stm).ensuring { pool.queue.offer(conn) }
   } yield rows
 
-  def queryHead[R](render: => RenderedQuery[R]): RIO[Blocking, R] = for {
-    stm  <- Task.effect { render }
+  def queryHead[R](render: => RenderedQuery[R]): RIO[Any, R] = for {
+    stm  <- Task.attempt { render }
     conn <- pool.queue.take
     rows <- conn.query(stm).ensuring { pool.queue.offer(conn) }
-    head <- Task.effect { rows.head }
+    head <- Task.attempt { rows.head }
   } yield head
 
-  def queryHeadOpt[R](render: => RenderedQuery[R]): RIO[Blocking, Option[R]] = for {
-    stm     <- Task.effect { render }
+  def queryHeadOpt[R](render: => RenderedQuery[R]): RIO[Any, Option[R]] = for {
+    stm     <- Task.attempt { render }
     conn    <- pool.queue.take
     rows    <- conn.query(stm).ensuring { pool.queue.offer(conn) }
-    headOpt <- Task.effect { rows.headOption }
+    headOpt <- Task.attempt { rows.headOption }
   } yield headOpt
 
-  def exec(render: => RenderedOperation): RIO[Blocking, Unit] = for {
-    stm  <- Task.effect { render }
+  def exec(render: => RenderedOperation): RIO[Any, Unit] = for {
+    stm  <- Task.attempt { render }
     conn <- pool.queue.take
     _    <- conn.exec(stm).ensuring { pool.queue.offer(conn) }
   } yield ()
 
-  def execNum(render: => RenderedOperation): RIO[Blocking, Int] = for {
-    stm  <- Task.effect { render }
+  def execNum(render: => RenderedOperation): RIO[Any, Int] = for {
+    stm  <- Task.attempt { render }
     conn <- pool.queue.take
     num  <- conn.execNum(stm).ensuring { pool.queue.offer(conn) }
   } yield num
 
-  def close: URIO[Blocking, Unit] = for {
+  def close: URIO[Any, Unit] = for {
     _ <- ZIO.foreach(pool.all)(_.close()).orDie
     _ <- pool.queue.shutdown
   } yield ()
@@ -131,39 +133,39 @@ private class DefaultApi(pool: Pool) extends Kuzminki {
 
 private class SplitApi(getPool: Pool, setPool: Pool) extends Kuzminki {
 
-  def query[R](render: => RenderedQuery[R]): RIO[Blocking, List[R]] = for {
-    stm  <- Task.effect { render }
+  def query[R](render: => RenderedQuery[R]): RIO[Any, List[R]] = for {
+    stm  <- Task.attempt { render }
     conn <- getPool.queue.take
     rows <- conn.query(stm).ensuring { getPool.queue.offer(conn) }
   } yield rows
 
-  def queryHead[R](render: => RenderedQuery[R]): RIO[Blocking, R] = for {
-    stm  <- Task.effect { render }
+  def queryHead[R](render: => RenderedQuery[R]): RIO[Any, R] = for {
+    stm  <- Task.attempt { render }
     conn <- getPool.queue.take
     rows <- conn.query(stm).ensuring { getPool.queue.offer(conn) }
-    head <- Task.effect { rows.head }
+    head <- Task.attempt { rows.head }
   } yield head
 
-  def queryHeadOpt[R](render: => RenderedQuery[R]): RIO[Blocking, Option[R]] = for {
-    stm     <- Task.effect { render }
+  def queryHeadOpt[R](render: => RenderedQuery[R]): RIO[Any, Option[R]] = for {
+    stm     <- Task.attempt { render }
     conn    <- getPool.queue.take
     rows    <- conn.query(stm).ensuring { getPool.queue.offer(conn) }
-    headOpt <- Task.effect { rows.headOption }
+    headOpt <- Task.attempt { rows.headOption }
   } yield headOpt
 
-  def exec(render: => RenderedOperation): RIO[Blocking, Unit] = for {
-    stm  <- Task.effect { render }
+  def exec(render: => RenderedOperation): RIO[Any, Unit] = for {
+    stm  <- Task.attempt { render }
     conn <- setPool.queue.take
     _    <- conn.exec(stm).ensuring { setPool.queue.offer(conn) }
   } yield ()
 
-  def execNum(render: => RenderedOperation): RIO[Blocking, Int] = for {
-    stm  <- Task.effect { render }
+  def execNum(render: => RenderedOperation): RIO[Any, Int] = for {
+    stm  <- Task.attempt { render }
     conn <- setPool.queue.take
     num  <- conn.execNum(stm).ensuring { setPool.queue.offer(conn) }
   } yield num
 
-  def close: URIO[Blocking, Unit] = for {
+  def close: URIO[Any, Unit] = for {
     _ <- ZIO.foreach(getPool.all)(_.close()).orDie
     _ <- getPool.queue.shutdown
     _ <- ZIO.foreach(setPool.all)(_.close()).orDie
