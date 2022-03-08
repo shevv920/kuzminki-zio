@@ -4,6 +4,11 @@ name := "kuzminki-zio"
 
 version := "0.9.2-ZIO2a"
 
+scalacOptions ++= Seq(
+  "-deprecation",
+  "-feature"
+)
+
 lazy val root = (project in file("."))
   .settings(
     name := "kuzminki-zio",

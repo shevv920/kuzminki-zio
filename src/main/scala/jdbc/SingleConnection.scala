@@ -34,8 +34,6 @@ import scala.collection.mutable.ListBuffer
 
 import zio._
 
-
-
 import kuzminki.api.{DbConfig, KuzminkiError}
 import kuzminki.shape.RowConv
 import kuzminki.render.{
